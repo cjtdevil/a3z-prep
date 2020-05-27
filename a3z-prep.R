@@ -1,5 +1,7 @@
 library(readxl);library(tidyverse)
-df <- read_excel("Player Master List (1).xlsx")
+
+# Download file from Corey Sznajder's Patreon (patreon.com/CSznajder)
+df <- read_excel("Player Master List.xlsx")
 
 fun.teams = function(teams){
   if(length(teams)>1){
