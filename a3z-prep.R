@@ -1,4 +1,4 @@
-library(readxl);library(tidyverse)
+library(tidyverse)
 
 # Download file from Corey Sznajder's Patreon (patreon.com/CSznajder)
 df <- read_excel("Player Master List.xlsx")
