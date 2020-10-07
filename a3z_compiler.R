@@ -1,0 +1,69 @@
+library(tidyverse);library(readxl);library(utils)
+
+fun.teams = function(teams){
+  if(length(teams)>1){
+    allteams = unique(teams)
+    out = paste(allteams,collapse = '/')
+  }else{
+    out = teams
+  }
+  return(out)
+}
+
+df <- read_excel("C:/Users/CJ/Downloads/All Three Zones Master Sheet (1).xlsx")
+
+df %>%
+  select(player=Players,team=Team,pos=Pos.,season=Year,
+         toi = `5v5 TOI`,
+         iSF=Shots,sA=Passes,
+         entries = `Zone Entries`,cEntries=Carries...16,
+         exits = `Exit Attempts`,cExits=`Exits w/ Possession`,
+         targets = Targets, cEA = Carries...25,) %>%
+  mutate(player = toupper(player),
+         season = as.numeric(substr(season,1,4))) %>%
+  mutate(scode = 10^(season - 2016)) -> dfnew
+
+scodes = dfnew$scode %>% unique
+
+for(i in 1:length(scodes)){
+  temp_scodes = combn(scodes,i)  %>% data.frame()
+  for(j in 1:ncol(temp_scodes)){
+    
+    scodes_temp = temp_scodes[,j]
+    
+    df_temp = dfnew %>%
+      filter(scode %in% scodes_temp) %>%
+      group_by(player) %>%
+      mutate(team = fun.teams(team)) %>%
+      group_by(player,pos,team) %>%
+      summarise_at(vars(toi:cEA),funs(sum)) %>%
+      mutate(scode = sum(scodes_temp))
+    
+    
+    if(j==1 & i==1){
+      df_out = df_temp
+    }else{
+      df_out = df_out %>%
+        bind_rows(df_temp)
+    }
+  }
+}
+
+df_final = df_out %>% ungroup %>% 
+  mutate(cEA = ifelse(pos=="F",NA,cEA)) %>%
+  mutate(cE_perc = cEntries/entries,
+         cEA_perc = cEA/targets,
+         cEx_perc = cExits/exits) %>%
+  mutate_at(vars(iSF:cEA),list(~60*./toi)) %>%
+  select(-entries,-exits,-targets) %>%
+  pivot_longer(cols = c(iSF:cEA,cE_perc:cEx_perc,),names_to = 'metric',values_to = 'value') %>%
+  group_by(metric,scode,pos) %>%
+  mutate(zscore = pnorm(scale(value))) %>%
+  mutate(cat = ifelse(metric %in% c('iSF','sA'),'shot contr',
+                      ifelse(metric %in% c('cEntries','cE_perc'),'entries',
+                             ifelse(metric %in% c('cExits','cEx_perc'),'exits',
+                                    'entry def')))) %>%
+  arrange(player,scode) %>%
+  filter(!is.na(metric))
+
+write.csv(df_final,file="C://Users/CJ/Downloads/a3z.csv")
