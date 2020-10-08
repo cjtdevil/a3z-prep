@@ -1,5 +1,7 @@
+# Library loading
 library(tidyverse);library(readxl);library(utils)
 
+# Create "TM1/TM2" Format
 fun.teams = function(teams){
   if(length(teams)>1){
     allteams = unique(teams)
@@ -10,9 +12,11 @@ fun.teams = function(teams){
   return(out)
 }
 
-df <- read_excel("C:/Users/CJ/Downloads/All Three Zones Master Sheet (1).xlsx")
+# Read in Sznajder data 
+raw <- read_excel("All Three Zones Master Sheet.xlsx") # via https://www.patreon.com/CSznajder/posts
 
-df %>%
+# Clean Data
+clean <- raw %>%
   select(player=Players,team=Team,pos=Pos.,season=Year,
          toi = `5v5 TOI`,
          iSF=Shots,sA=Passes,
@@ -21,17 +25,18 @@ df %>%
          targets = Targets, cEA = Carries...25,) %>%
   mutate(player = toupper(player),
          season = as.numeric(substr(season,1,4))) %>%
-  mutate(scode = 10^(season - 2016)) -> dfnew
+  mutate(scode = 10^(season - 2016)) 
 
-scodes = dfnew$scode %>% unique
+scodes <- clean$scode %>% unique
 
+#
 for(i in 1:length(scodes)){
-  temp_scodes = combn(scodes,i)  %>% data.frame()
+  temp_scodes <- combn(scodes,i)  %>% data.frame()
   for(j in 1:ncol(temp_scodes)){
     
-    scodes_temp = temp_scodes[,j]
+    scodes_temp <- temp_scodes[,j]
     
-    df_temp = dfnew %>%
+    temp <- clean %>%
       filter(scode %in% scodes_temp) %>%
       group_by(player) %>%
       mutate(team = fun.teams(team)) %>%
@@ -41,15 +46,15 @@ for(i in 1:length(scodes)){
     
     
     if(j==1 & i==1){
-      df_out = df_temp
+      out <- temp
     }else{
-      df_out = df_out %>%
-        bind_rows(df_temp)
+      out <- out %>%
+        bind_rows(temp)
     }
   }
 }
 
-df_final = df_out %>% ungroup %>% 
+df_final <- out %>% ungroup %>% 
   mutate(cEA = ifelse(pos=="F",NA,cEA)) %>%
   mutate(cE_perc = cEntries/entries,
          cEA_perc = cEA/targets,
@@ -66,4 +71,4 @@ df_final = df_out %>% ungroup %>%
   arrange(player,scode) %>%
   filter(!is.na(metric))
 
-write.csv(df_final,file="C://Users/CJ/Downloads/a3z.csv")
+write.csv(df_final,file="a3z.csv")
