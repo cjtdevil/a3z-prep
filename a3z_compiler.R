@@ -75,7 +75,34 @@ df_final <- out %>% ungroup %>%
                              ifelse(metric %in% c('cExits','cEx_perc'),'exits',
                                     'entry def')))) %>%
   arrange(player,scode) %>%
-  filter(!is.na(metric))
+  filter(!is.na(metric)) %>%
+  mutate(player=gsub("BRANDON GAUNCE","BRENDAN GAUNCE",player),
+         player=gsub("BRANDON PERLINI","BRENDAN PERLINI",player),
+         player=gsub("COLLIN MILLER","COLIN MILLLER",player),
+         player=gsub("FREDERIK GAUDREAU","FREDERICK GAUDREAU",player),
+         player=gsub("ISAC LUNDERSTROM","ISAC LUNDESTROM",player),
+         player=gsub("JAROME IGINLIA","JAROME IGINLA",player),
+         player=gsub("JESSE PULUJARVI","JESSE PULJUJARVI",player),
+         player=gsub("JOAKIM NORSTROM","JOAKIM NORDSTROM",player),
+         player=gsub("JOSH MORRSSEY","JOSH MORRISSEY",player),
+         player=gsub("KEVIN LABANC","KEVIN LEBANC",player),
+         player=gsub("KORBIANIAN HOLZER","KORBINIAN HOLZER",player),
+         player=gsub("MARCUS PETERSSON","MARCUS PETTERSSON",player),
+         player=gsub("MARCUS SORENSON","MARCUS SORENSEN",player),
+         player=gsub("PETER CEHLARIIK","PETER CEHLARIK",player),
+         player=gsub("PHILIP DANAULT","PHILLIP DANAULT",player),
+         player=gsub("ROBERT HAAG","ROBERT HAGG",player),
+         player=gsub("ROSS JOHNSOTN","ROSS JOHNSTON",player),
+         player=gsub("STEFAN NOENSEN","STEFAN NOESEN",player),
+         player=gsub("TOBIAS ENSTROM","TOBY ENSTROM",player),
+         player=gsub("TROY STETCHER","TROY STECHER",player),
+         player=gsub("URHO VAAKANINEN","URHO VAAKANAINEN",player),
+         player=gsub("VLADISLAV KAMANEV","VLADISLAV KAMENEV",player))
+
+
+
+
+  
 
 # Output to CSV
 write.csv(df_final,file="a3z.csv")
