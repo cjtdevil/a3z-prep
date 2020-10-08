@@ -25,11 +25,12 @@ clean <- raw %>%
          targets = Targets, cEA = Carries...25,) %>%
   mutate(player = toupper(player),
          season = as.numeric(substr(season,1,4))) %>%
-  mutate(scode = 10^(season - 2016)) 
+  mutate(scode = 10^(season - 2016))  # Make seasons 4-char binary, one for each included season
 
+# Get season codes for loop
 scodes <- clean$scode %>% unique
 
-#
+# Sum player performance through all combinations of seasons
 for(i in 1:length(scodes)){
   temp_scodes <- combn(scodes,i)  %>% data.frame()
   for(j in 1:ncol(temp_scodes)){
@@ -54,6 +55,7 @@ for(i in 1:length(scodes)){
   }
 }
 
+# Calculate per 60s
 df_final <- out %>% ungroup %>% 
   mutate(cEA = ifelse(pos=="F",NA,cEA)) %>%
   mutate(cE_perc = cEntries/entries,
@@ -61,7 +63,11 @@ df_final <- out %>% ungroup %>%
          cEx_perc = cExits/exits) %>%
   mutate_at(vars(iSF:cEA),list(~60*./toi)) %>%
   select(-entries,-exits,-targets) %>%
+  
+# Make data "long" form for tableau  
   pivot_longer(cols = c(iSF:cEA,cE_perc:cEx_perc,),names_to = 'metric',values_to = 'value') %>%
+
+# Calculate percentiles by position
   group_by(metric,scode,pos) %>%
   mutate(zscore = pnorm(scale(value))) %>%
   mutate(cat = ifelse(metric %in% c('iSF','sA'),'shot contr',
@@ -71,4 +77,5 @@ df_final <- out %>% ungroup %>%
   arrange(player,scode) %>%
   filter(!is.na(metric))
 
+# Output to CSV
 write.csv(df_final,file="a3z.csv")
