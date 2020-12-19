@@ -1,5 +1,5 @@
 # Library loading
-library(tidyverse);library(readxl);library(utils)
+library(tidyverse);library(readxl);library(utils);library(zoo)
 
 # Create "TM1/TM2" Format
 fun.teams = function(teams){
@@ -25,7 +25,33 @@ clean <- raw %>%
          targets = Targets, cEA = Carries...25,) %>%
   mutate(player = toupper(player),
          season = as.numeric(substr(season,1,4))) %>%
-  mutate(scode = 10^(season - 2016))  # Make seasons 4-char binary, one for each included season
+  mutate(scode = 10^(season - 2016)) %>% # Make seasons 4-char binary, one for each included season
+  mutate(player=gsub("BRANDON GAUNCE","BRENDAN GAUNCE",player),
+         player=gsub("BRANDON PERLINI","BRENDAN PERLINI",player),
+         player=gsub("COLLIN MILLER","COLIN MILLLER",player),
+         player=gsub("FREDERIK GAUDREAU","FREDERICK GAUDREAU",player),
+         player=gsub("ISAC LUNDERSTROM","ISAC LUNDESTROM",player),
+         player=gsub("JAROME IGINLIA","JAROME IGINLA",player),
+         player=gsub("JESSE PULUJARVI","JESSE PULJUJARVI",player),
+         player=gsub("JOAKIM NORSTROM","JOAKIM NORDSTROM",player),
+         player=gsub("JOSH MORRSSEY","JOSH MORRISSEY",player),
+         player=gsub("KEVIN LABANC","KEVIN LEBANC",player),
+         player=gsub("KORBIANIAN HOLZER","KORBINIAN HOLZER",player),
+         player=gsub("MARCUS PETERSSON","MARCUS PETTERSSON",player),
+         player=gsub("MARCUS SORENSON","MARCUS SORENSEN",player),
+         player=gsub("PETER CEHLARIIK","PETER CEHLARIK",player),
+         player=gsub("PHILIP DANAULT","PHILLIP DANAULT",player),
+         player=gsub("ROBERT HAAG","ROBERT HAGG",player),
+         player=gsub("ROSS JOHNSOTN","ROSS JOHNSTON",player),
+         player=gsub("STEFAN NOENSEN","STEFAN NOESEN",player),
+         player=gsub("TOBIAS ENSTROM","TOBY ENSTROM",player),
+         player=gsub("TROY STETCHER","TROY STECHER",player),
+         player=gsub("URHO VAAKANINEN","URHO VAAKANAINEN",player),
+         player=gsub("VLADISLAV KAMANEV","VLADISLAV KAMENEV",player)) %>% ungroup %>% 
+  group_by(player,pos) %>% 
+  mutate(count=n()) %>% ungroup %>% group_by(player) %>%
+  mutate(pos=ifelse(count==max(count),pos,NA),
+         pos = na.locf(pos,na.rm = F)) %>% ungroup 
 
 # Get season codes for loop
 scodes <- clean$scode %>% unique
@@ -56,7 +82,7 @@ for(i in 1:length(scodes)){
 }
 
 # Calculate per 60s
-df_final <- out %>% ungroup %>% 
+df_final <- out %>% ungroup %>%
   mutate(cEA = ifelse(pos=="F",NA,cEA)) %>%
   mutate(cE_perc = cEntries/entries,
          cEA_perc = cEA/targets,
@@ -76,29 +102,8 @@ df_final <- out %>% ungroup %>%
                              ifelse(metric %in% c('cExits','cEx_perc'),'exits',
                                     'entry def')))) %>%
   arrange(player,scode) %>%
-  filter(!is.na(metric)) %>%
-  mutate(player=gsub("BRANDON GAUNCE","BRENDAN GAUNCE",player),
-         player=gsub("BRANDON PERLINI","BRENDAN PERLINI",player),
-         player=gsub("COLLIN MILLER","COLIN MILLLER",player),
-         player=gsub("FREDERIK GAUDREAU","FREDERICK GAUDREAU",player),
-         player=gsub("ISAC LUNDERSTROM","ISAC LUNDESTROM",player),
-         player=gsub("JAROME IGINLIA","JAROME IGINLA",player),
-         player=gsub("JESSE PULUJARVI","JESSE PULJUJARVI",player),
-         player=gsub("JOAKIM NORSTROM","JOAKIM NORDSTROM",player),
-         player=gsub("JOSH MORRSSEY","JOSH MORRISSEY",player),
-         player=gsub("KEVIN LABANC","KEVIN LEBANC",player),
-         player=gsub("KORBIANIAN HOLZER","KORBINIAN HOLZER",player),
-         player=gsub("MARCUS PETERSSON","MARCUS PETTERSSON",player),
-         player=gsub("MARCUS SORENSON","MARCUS SORENSEN",player),
-         player=gsub("PETER CEHLARIIK","PETER CEHLARIK",player),
-         player=gsub("PHILIP DANAULT","PHILLIP DANAULT",player),
-         player=gsub("ROBERT HAAG","ROBERT HAGG",player),
-         player=gsub("ROSS JOHNSOTN","ROSS JOHNSTON",player),
-         player=gsub("STEFAN NOENSEN","STEFAN NOESEN",player),
-         player=gsub("TOBIAS ENSTROM","TOBY ENSTROM",player),
-         player=gsub("TROY STETCHER","TROY STECHER",player),
-         player=gsub("URHO VAAKANINEN","URHO VAAKANAINEN",player),
-         player=gsub("VLADISLAV KAMANEV","VLADISLAV KAMENEV",player))
+  filter(!is.na(metric)) 
+  
 
 
 
