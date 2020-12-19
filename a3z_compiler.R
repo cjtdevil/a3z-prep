@@ -69,7 +69,8 @@ df_final <- out %>% ungroup %>%
 
 # Calculate percentiles by position
   group_by(metric,scode,pos) %>%
-  mutate(zscore = pnorm(scale(value))) %>%
+  mutate(zscore = pnorm(scale(value)),
+         zscore = ifelse(metric %in% c('cEA','cEA_perc'),1-zscore,zscore)) %>%
   mutate(cat = ifelse(metric %in% c('iSF','sA'),'shot contr',
                       ifelse(metric %in% c('cEntries','cE_perc'),'entries',
                              ifelse(metric %in% c('cExits','cEx_perc'),'exits',
